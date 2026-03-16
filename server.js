@@ -203,4 +203,30 @@ app.get("/generate-site", (req, res) => {
   });
 });
 
-app.get("/preview-site", (req,
+app.get("/preview-site", (req, res) => {
+  const prompt = req.query.prompt || "basic website";
+  const project = buildProject(prompt);
+
+  res.setHeader("Content-Type", "text/html");
+  res.send(project.files["index.html"]
+    .replace('</head>', `<style>${project.files["style.css"]}</style></head>`)
+    .replace('</body>', `<script>${project.files["script.js"]}</script></body>`));
+});
+
+app.get("/files", (req, res) => {
+  const prompt = req.query.prompt || "basic website";
+  const project = buildProject(prompt);
+
+  res.json({
+    status: "success",
+    prompt,
+    projectName: project.projectName,
+    files: project.files
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("Server running on port", PORT);
+});
