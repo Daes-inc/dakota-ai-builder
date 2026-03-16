@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import archiver from "archiver";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -7,10 +8,19 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+function sanitizeHtml(text) {
+  return String(text || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 function makeProject(promptText) {
   const prompt = (promptText || "starter app").trim();
-  const safePrompt = prompt.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const projectName = prompt.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "starter-app";
+  const safePrompt = sanitizeHtml(prompt);
+  const projectName =
+    prompt.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") ||
+    "starter-app";
 
   const indexHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -262,9 +272,14 @@ app.get("/", (req, res) => {
       margin: 18px 0 14px;
       box-sizing: border-box;
     }
+    .button-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
     button {
-      display: block;
-      margin: 0 auto 18px;
       background: #22c55e;
       color: #052e16;
       border: none;
@@ -273,6 +288,10 @@ app.get("/", (req, res) => {
       font-size: 18px;
       font-weight: 700;
       cursor: pointer;
+    }
+    .secondary {
+      background: #334155;
+      color: white;
     }
     pre {
       background: #0b1220;
@@ -289,10 +308,14 @@ app.get("/", (req, res) => {
 <body>
   <div class="card">
     <h1>Dakota AI Builder</h1>
-    <p>Turn a prompt into a starter multi-file app project.</p>
+    <p>Turn a prompt into a starter multi-file app project and download it as a ZIP.</p>
 
     <input id="prompt" value="affiliate comparison site" />
-    <button onclick="buildApp()">Build App</button>
+
+    <div class="button-row">
+      <button onclick="buildApp()">Build App</button>
+      <button class="secondary" onclick="downloadZip()">Download ZIP</button>
+    </div>
 
     <pre id="result">Ready.</pre>
   </div>
@@ -312,6 +335,12 @@ app.get("/", (req, res) => {
       const data = await res.json();
       document.getElementById("result").textContent = JSON.stringify(data, null, 2);
     }
+
+    function downloadZip() {
+      const prompt = document.getElementById("prompt").value;
+      const url = "/download-app?prompt=" + encodeURIComponent(prompt);
+      window.open(url, "_blank");
+    }
   </script>
 </body>
 </html>`);
@@ -321,13 +350,38 @@ app.get("/health", (req, res) => {
   res.json({
     status: "online",
     system: "Dakota AI Builder",
-    version: "1.2"
+    version: "1.3"
   });
 });
 
 app.post("/create-app", (req, res) => {
   const result = makeProject(req.body?.prompt);
   res.json(result);
+});
+
+app.get("/download-app", (req, res) => {
+  const result = makeProject(req.query.prompt);
+  const { projectName, files } = result;
+
+  res.setHeader("Content-Type", "application/zip");
+  res.setHeader("Content-Disposition", \`attachment; filename="\${projectName}.zip"\`);
+
+  const archive = archiver("zip", { zlib: { level: 9 } });
+
+  archive.on("error", (err) => {
+    res.status(500).json({
+      status: "error",
+      message: err.message
+    });
+  });
+
+  archive.pipe(res);
+
+  for (const [filename, content] of Object.entries(files)) {
+    archive.append(content, { name: filename });
+  }
+
+  archive.finalize();
 });
 
 app.listen(PORT, () => {
