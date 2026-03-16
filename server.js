@@ -364,15 +364,17 @@ app.get("/download-app", (req, res) => {
   const { projectName, files } = result;
 
   res.setHeader("Content-Type", "application/zip");
-  res.setHeader("Content-Disposition", \`attachment; filename="\${projectName}.zip"\`);
+  res.setHeader("Content-Disposition", `attachment; filename="${projectName}.zip"`);
 
   const archive = archiver("zip", { zlib: { level: 9 } });
 
   archive.on("error", (err) => {
-    res.status(500).json({
-      status: "error",
-      message: err.message
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        status: "error",
+        message: err.message
+      });
+    }
   });
 
   archive.pipe(res);
