@@ -1,42 +1,39 @@
 const express = require("express");
+const path = require("path");
+
 const app = express();
 
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public"), {
+  etag: false,
+  lastModified: false,
+  setHeaders: (res) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.setHeader("Surrogate-Control", "no-store");
+  }
+}));
 
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/public/index.html");
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.get("/health", (req, res) => {
+  res.json({ status: "online", app: "Dakota AI Builder" });
 });
 
 app.post("/build", (req, res) => {
-  console.log("BUILD HIT");
+  const prompt = req.body.prompt || "Landing Page";
 
-  try {
-    const prompt = req.body.prompt || "Default Page";
-
-    const response = {
-      success: true,
-      prompt: prompt,
-      previewHtml: `
-        <div style="padding:20px;">
-          <h1>${prompt}</h1>
-          <p>System working.</p>
-        </div>
-      `
-    };
-
-    res.json(response);
-
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      error: err.message
-    });
-  }
+  res.json({
+    success: true,
+    prompt,
+    previewHtml: `<div><h1>${prompt}</h1><p>This is a generated landing page preview.</p></div>`
+  });
 });
 
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
-  console.log("RUNNING ON " + PORT);
+  console.log("Server running on port " + PORT);
 });
