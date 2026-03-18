@@ -19,30 +19,42 @@ function generateProject(prompt) {
   const name = prompt || "My App";
   const projectName = slugify(name);
 
-  return {
-    projectName,
-    files: {
-      "index.html": `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html>
 <head>
 <title>${name}</title>
-<link rel="stylesheet" href="style.css">
+<style>
+body {
+  background:#111;
+  color:white;
+  text-align:center;
+  font-family:Arial;
+}
+button {
+  padding:10px 20px;
+  background:#22c55e;
+  border:none;
+  color:white;
+  font-size:18px;
+  cursor:pointer;
+}
+</style>
 </head>
 <body>
 <h1>${name}</h1>
 <button onclick="alert('App working')">Click Me</button>
-<script src="script.js"></script>
+<script>
+console.log("App loaded");
+</script>
 </body>
-</html>`,
+</html>`;
 
-      "style.css": `body {
-  background: #111;
-  color: white;
-  text-align: center;
-  font-family: Arial;
-}`,
-
-      "script.js": `console.log("App loaded");`
+  return {
+    projectName,
+    files: {
+      "index.html": html,
+      "style.css": "/* moved inline */",
+      "script.js": "// moved inline"
     }
   };
 }
@@ -73,8 +85,8 @@ async function build(){
   document.getElementById("out").textContent =
     JSON.stringify(data,null,2);
 
-  const html = data.files["index.html"];
-  document.getElementById("preview").srcdoc = html;
+  document.getElementById("preview").srcdoc =
+    data.files["index.html"];
 }
 
 async function download(){
@@ -96,13 +108,6 @@ async function download(){
 }
 </script>
   `);
-});
-
-app.get("/health", (req, res) => {
-  res.json({
-    status: "online",
-    app: "Dakota AI Builder"
-  });
 });
 
 app.post("/create-app", (req, res) => {
