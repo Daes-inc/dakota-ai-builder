@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Dakota AI Builder v101</title>
+<title>Dakota AI Builder v103</title>
 
 <style>
 body {
@@ -10,7 +10,6 @@ body {
   background: #0f172a;
   color: white;
   text-align: center;
-  margin: 0;
 }
 
 .container {
@@ -31,7 +30,6 @@ button {
   border: none;
   background: #22c55e;
   color: white;
-  font-size: 16px;
 }
 
 #preview {
@@ -41,11 +39,6 @@ button {
   min-height: 200px;
   border-radius: 10px;
 }
-
-.version {
-  color: #86efac;
-  margin-bottom: 10px;
-}
 </style>
 </head>
 
@@ -53,43 +46,40 @@ button {
 
 <div class="container">
   <h1>Dakota AI Builder</h1>
-  <div class="version">VERSION 101</div>
+  <div>VERSION 103</div>
 
   <input id="prompt" placeholder="Enter your idea" />
   <br>
-
-  <button id="buildBtn">Build</button>
+  <button id="btn">Build</button>
 
   <div id="preview">Ready...</div>
 </div>
 
 <script>
-document.getElementById("buildBtn").addEventListener("click", async function () {
+document.getElementById("btn").onclick = async function () {
 
-  const prompt = document.getElementById("prompt").value || "test page";
   const preview = document.getElementById("preview");
 
-  preview.innerHTML = "LOADING...";
+  preview.innerHTML = "CLICK WORKED";
 
   try {
-    const res = await fetch("/build", {
+    const res = await fetch("https://dakota-ai-builder-production.up.railway.app/build", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ prompt: prompt })
+      body: JSON.stringify({
+        prompt: document.getElementById("prompt").value || "test page"
+      })
     });
+
+    preview.innerHTML = "REQUEST SENT";
 
     const data = await res.json();
 
     preview.innerHTML = `
-      <div style="border:1px solid #1e293b; border-radius:10px; overflow:hidden;">
-        <div style="background:#020617; padding:10px; font-size:12px;">
-          STATUS: ${res.status}
-        </div>
-        <div style="background:white; color:black; padding:15px;">
-          ${data.previewHtml}
-        </div>
+      <div style="background:white; color:black; padding:15px; border-radius:10px;">
+        ${data.previewHtml}
       </div>
     `;
 
@@ -97,7 +87,7 @@ document.getElementById("buildBtn").addEventListener("click", async function () 
     preview.innerHTML = "ERROR: " + err.message;
   }
 
-});
+};
 </script>
 
 </body>
