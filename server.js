@@ -54,7 +54,10 @@ app.get("/", (req, res) => {
   <br/><br/>
   <button onclick="build()">Build</button>
   <button onclick="download()">Download</button>
+
   <pre id="out"></pre>
+
+  <iframe id="preview" style="width:100%;height:400px;border:1px solid #ccc;"></iframe>
 
 <script>
 async function build(){
@@ -67,8 +70,12 @@ async function build(){
   });
 
   const data = await res.json();
+
   document.getElementById("out").textContent =
     JSON.stringify(data,null,2);
+
+  const html = data.files["index.html"];
+  document.getElementById("preview").srcdoc = html;
 }
 
 async function download(){
