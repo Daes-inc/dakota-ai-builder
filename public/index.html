@@ -1,3 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Dakota AI Builder</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
+  margin: 0;
+  text-align: center;
+}
+
+.container {
+  padding: 30px;
+}
+
+input {
+  padding: 15px;
+  width: 80%;
+  border-radius: 10px;
+  border: none;
+  margin-bottom: 15px;
+}
+
+button {
+  padding: 15px 25px;
+  margin: 5px;
+  border-radius: 10px;
+  border: none;
+  background: #22c55e;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#preview {
+  margin-top: 20px;
+  background: #020617;
+  padding: 20px;
+  min-height: 200px;
+  border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>Dakota AI Builder</h1>
+
+  <input id="prompt" placeholder="Enter your idea" />
+
+  <br>
+
+  <button onclick="build()">Build</button>
+
+  <div id="preview">Ready...</div>
+</div>
+
 <script>
 async function build() {
   const prompt = document.getElementById("prompt").value;
@@ -6,36 +68,25 @@ async function build() {
   preview.innerHTML = "Loading...";
 
   try {
-    const res = await fetch("https://dakota-ai-builder-production.up.railway.app/build", {
+    const res = await fetch("/build", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        prompt: prompt,
-        template: "premium",
-        affiliateLink: ""
+        prompt: prompt
       })
     });
 
     const data = await res.json();
 
-    preview.innerHTML = "";
-
-    const iframe = document.createElement("iframe");
-    iframe.style.width = "100%";
-    iframe.style.height = "500px";
-    iframe.style.border = "none";
-
-    preview.appendChild(iframe);
-
-    iframe.contentDocument.open();
-    iframe.contentDocument.write(data.previewHtml);
-    iframe.contentDocument.close();
+    preview.innerHTML = data.previewHtml;
 
   } catch (err) {
-    preview.innerHTML = "❌ ERROR: " + err.message;
-    console.error(err);
+    preview.innerHTML = "ERROR: " + err.message;
   }
 }
 </script>
+
+</body>
+</html>
