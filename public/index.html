@@ -1,80 +1,211 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GenesisAI AutoBuilder</title>
-
   <style>
     body {
-      font-family: Arial;
-      background:#0f172a;
-      color:white;
-      text-align:center;
-      padding:50px;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+      margin: 0;
+      padding: 40px 20px;
+    }
+
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 44px;
+      margin-bottom: 8px;
+    }
+
+    .sub {
+      color: #cbd5e1;
+      margin-bottom: 24px;
+    }
+
+    .panel {
+      background: #1e293b;
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 20px;
     }
 
     input {
-      padding:15px;
-      width:300px;
-      border-radius:10px;
-      border:none;
-      margin:10px;
+      width: min(100%, 420px);
+      padding: 15px;
+      border-radius: 10px;
+      border: none;
+      margin: 10px 0;
+      box-sizing: border-box;
+      font-size: 16px;
     }
 
-    button {
-      padding:15px 30px;
-      background:#22c55e;
-      border:none;
-      border-radius:10px;
-      color:white;
-      font-size:16px;
-      cursor:pointer;
+    button, .upgrade-link {
+      display: inline-block;
+      padding: 15px 28px;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      margin-top: 8px;
     }
 
-    .upgrade {
-      margin-top:40px;
-      background:#1e293b;
-      padding:25px;
-      border-radius:12px;
-      display:inline-block;
+    .build-btn {
+      background: #22c55e;
     }
 
-    .buy-btn {
-      background:#ef4444;
-      margin-top:10px;
+    .upgrade-link {
+      background: #ef4444;
     }
 
-    .free {
-      margin-top:20px;
-      font-size:14px;
-      color:#94a3b8;
+    .status {
+      color: #94a3b8;
+      margin-top: 10px;
+      font-size: 15px;
+    }
+
+    .result-box {
+      margin-top: 20px;
+      background: #020617;
+      border-radius: 12px;
+      padding: 18px;
+      text-align: left;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 100px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .preview-link {
+      color: #86efac;
+      font-weight: bold;
+      word-break: break-all;
     }
   </style>
 </head>
-
 <body>
+  <div class="wrap">
+    <h1>GenesisAI AutoBuilder</h1>
+    <div class="sub">Build. Launch. Profit.</div>
 
-  <h1>GenesisAI AutoBuilder</h1>
-  <p>Build. Launch. Profit.</p>
+    <div class="panel">
+      <form id="buildForm">
+        <div>
+          <input id="idea" name="idea" placeholder="What do you want to build?" required />
+        </div>
+        <div>
+          <input id="affiliate" name="affiliate" placeholder="Affiliate link (optional)" />
+        </div>
+        <div>
+          <button type="submit" class="build-btn">Build My Page</button>
+        </div>
+      </form>
 
-  <form method="POST" action="/build">
-    <input name="idea" placeholder="What do you want to build?" required><br>
-    <input name="affiliate" placeholder="Affiliate link (optional)"><br>
-    <button type="submit">Build My Page</button>
-  </form>
+      <div id="usageStatus" class="status">Loading free build status...</div>
 
-  <div class="free">
-    Free plan: 2 builds included
+      <div id="upgradeBox" class="hidden" style="margin-top:20px;">
+        <h3>Unlock Unlimited Builds</h3>
+        <p>$39.99 one-time access</p>
+        <a
+          id="upgradeLink"
+          class="upgrade-link"
+          href="https://buy.stripe.com/eVq5kD2Gh0aH6ZW8fP5sA00"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Upgrade Now
+        </a>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Result</h3>
+      <div id="result" class="result-box">Your build result will show here.</div>
+    </div>
   </div>
 
-  <div class="upgrade">
-    <h3>Unlock Unlimited Builds</h3>
-    <p>$20 one-time access</p>
+  <script>
+    async function loadUsage() {
+      try {
+        const res = await fetch("/usage");
+        const data = await res.json();
 
-    <!-- 🔥 YOUR STRIPE LINK IS NOW CONNECTED -->
-    <a href="https://buy.stripe.com/eVq5kD2Gh0aH6ZW8fP5sA00" target="_blank">
-      <button class="buy-btn">Upgrade Now</button>
-    </a>
-  </div>
+        const usageStatus = document.getElementById("usageStatus");
+        const upgradeBox = document.getElementById("upgradeBox");
+        const upgradeLink = document.getElementById("upgradeLink");
 
+        if (data.vip) {
+          usageStatus.textContent = "VIP mode: unlimited free builds";
+          upgradeBox.classList.add("hidden");
+          return;
+        }
+
+        usageStatus.textContent = `Free builds remaining: ${data.remaining} of 2`;
+        upgradeLink.href = data.stripeLink || upgradeLink.href;
+
+        if (data.limitReached) {
+          upgradeBox.classList.remove("hidden");
+        } else {
+          upgradeBox.classList.add("hidden");
+        }
+      } catch (err) {
+        document.getElementById("usageStatus").textContent = "Could not load usage status.";
+      }
+    }
+
+    document.getElementById("buildForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const idea = document.getElementById("idea").value.trim();
+      const affiliate = document.getElementById("affiliate").value.trim();
+      const result = document.getElementById("result");
+      const upgradeBox = document.getElementById("upgradeBox");
+      const upgradeLink = document.getElementById("upgradeLink");
+
+      result.textContent = "Building...";
+
+      try {
+        const res = await fetch("/build", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idea, affiliate })
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+          result.innerHTML =
+            `Free limit reached.\n\nUpgrade here:\n${data.stripeLink}`;
+          upgradeLink.href = data.stripeLink || upgradeLink.href;
+          upgradeBox.classList.remove("hidden");
+          await loadUsage();
+          return;
+        }
+
+        result.innerHTML =
+          `Build complete.\n\nOpen your page:\n` +
+          `<a class="preview-link" href="${data.fileUrl}" target="_blank">${location.origin}${data.fileUrl}</a>\n\n` +
+          `Free builds remaining: ${data.vip ? "unlimited" : data.remaining}`;
+
+        await loadUsage();
+      } catch (err) {
+        result.textContent = "Error: " + err.message;
+      }
+    });
+
+    loadUsage();
+  </script>
 </body>
 </html>
