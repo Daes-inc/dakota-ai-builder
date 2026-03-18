@@ -1,111 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Dakota AI Money System</title>
+  <title>GenesisAI</title>
+  <style>
+    body {
+      font-family: Arial;
+      background:#0f172a;
+      color:white;
+      text-align:center;
+      padding:50px;
+    }
 
-<style>
-body { font-family:Arial; background:#0f172a; color:white; text-align:center; }
-.container { padding:20px; }
-input, select { width:100%; padding:12px; margin-bottom:10px; }
-button { padding:12px; margin:5px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
-.build { background:#22c55e; }
-.upgrade { background:#f59e0b; }
-.secondary { background:#334155; }
-iframe { width:100%; height:400px; margin-top:20px; }
-</style>
+    input {
+      padding:15px;
+      width:300px;
+      border-radius:10px;
+      border:none;
+      margin:10px;
+    }
 
+    button {
+      padding:15px 30px;
+      background:#22c55e;
+      border:none;
+      border-radius:10px;
+      color:white;
+      font-size:16px;
+    }
+  </style>
 </head>
+
 <body>
+  <h1>GenesisAI</h1>
+  <p>Build. Launch. Profit.</p>
 
-<div class="container">
-
-<h1>Dakota AI Builder</h1>
-
-<input id="prompt" value="fitness affiliate landing page">
-
-<input id="affiliateLink" placeholder="Affiliate link">
-
-<button class="build" onclick="build()">Build</button>
-<button class="secondary" onclick="download()">Download</button>
-<button class="secondary" onclick="deploy()">Deploy</button>
-<button class="secondary" onclick="save()">Save</button>
-<button class="upgrade" onclick="upgrade()">Upgrade</button>
-
-<pre id="output"></pre>
-<iframe id="preview"></iframe>
-
-</div>
-
-<script>
-
-let project = null;
-
-async function build(){
-  const res = await fetch("/build", {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({
-      prompt: document.getElementById("prompt").value,
-      affiliateLink: document.getElementById("affiliateLink").value
-    })
-  });
-
-  const data = await res.json();
-  project = data;
-
-  document.getElementById("output").textContent = JSON.stringify(data,null,2);
-  if(data.previewHtml){
-    document.getElementById("preview").srcdoc = data.previewHtml;
-  }
-}
-
-async function upgrade(){
-  const res = await fetch("/upgrade",{method:"POST"});
-  const data = await res.json();
-  window.open(data.link);
-}
-
-async function download(){
-  const res = await fetch("/download",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify(project)
-  });
-
-  const blob = await res.blob();
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "site.zip";
-  a.click();
-}
-
-async function deploy(){
-  const res = await fetch("/deploy",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify(project)
-  });
-
-  const data = await res.json();
-  document.getElementById("output").textContent = JSON.stringify(data,null,2);
-
-  if(data.url){
-    window.open(data.url);
-  }
-}
-
-async function save(){
-  await fetch("/save-project",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify(project)
-  });
-
-  alert("Saved");
-}
-
-</script>
-
+  <form method="POST" action="/build">
+    <input name="idea" placeholder="Enter your idea" required><br>
+    <input name="affiliate" placeholder="Affiliate link (optional)"><br>
+    <button type="submit">Build Page</button>
+  </form>
 </body>
 </html>
