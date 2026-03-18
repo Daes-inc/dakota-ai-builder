@@ -1,245 +1,128 @@
-import express from "express";
-import cors from "cors";
-import archiver from "archiver";
-
+const express = require('express');
+const fetch = require('node-fetch');
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-app.use(cors());
 app.use(express.json());
 
-function slugify(text) {
-  return (text || "app")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "") || "app";
-}
+// ===== SIMPLE MEMORY LIMIT SYSTEM =====
+let usage = {};
 
-function generateProject(prompt) {
-  const name = prompt || "My App";
-  const projectName = slugify(name);
+// ===== SERVE FRONTEND =====
+app.use(express.static('public'));
 
-  const html = `<!DOCTYPE html>
+// ===== BUILD ROUTE =====
+app.post('/build', (req, res) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
+  usage[ip] = usage[ip] || 0;
+
+  if (usage[ip] >= 3) {
+    return res.json({
+      error: "Free limit reached. Upgrade required.",
+      upgrade: "/upgrade"
+    });
+  }
+
+  usage[ip]++;
+
+  const prompt = req.body.prompt || "My Website";
+
+  const project = {
+    projectName: prompt.replace(/\s+/g, '-'),
+    files: {
+      "index.html": `
+<!DOCTYPE html>
 <html>
 <head>
-<title>${name}</title>
+<title>${prompt}</title>
 <style>
-body {
-  background:#111;
-  color:white;
-  text-align:center;
-  font-family:Arial;
-  margin:0;
-  padding:40px;
-}
-button {
-  padding:10px 20px;
-  background:#22c55e;
-  border:none;
-  color:white;
-  font-size:18px;
-  cursor:pointer;
-  border-radius:8px;
-}
+body { font-family: Arial; text-align: center; padding: 50px; }
+button { padding: 10px 20px; margin-top: 20px; }
 </style>
 </head>
 <body>
-<h1>${name}</h1>
-<button onclick="alert('App working')">Click Me</button>
-<script>
-console.log("App loaded");
-</script>
-</body>
-</html>`;
 
-  return {
-    projectName,
-    files: {
-      "index.html": html,
-      "style.css": "/* moved inline */",
-      "script.js": "// moved inline"
+<h1>${prompt}</h1>
+<p>This site was generated instantly 🚀</p>
+<button onclick="alert('CTA Clicked')">Get Started</button>
+
+</body>
+</html>
+      `
     }
   };
-}
 
-function zipProjectToBuffer(project) {
-  return new Promise((resolve, reject) => {
-    const archive = archiver("zip");
-    const chunks = [];
+  res.json(project);
+});
 
-    archive.on("data", chunk => chunks.push(chunk));
-    archive.on("end", () => resolve(Buffer.concat(chunks)));
-    archive.on("error", err => reject(err));
+// ===== DEPLOY ROUTE =====
+app.post('/deploy', async (req, res) => {
+  try {
+    const files = req.body.files;
+    const token = process.env.NETLIFY_TOKEN;
 
-    for (const file in project.files) {
-      archive.append(project.files[file], { name: file });
+    if (!token) {
+      return res.json({ error: "Missing NETLIFY_TOKEN" });
     }
 
-    archive.finalize();
-  });
-}
+    // CREATE SITE
+    const siteRes = await fetch("https://api.netlify.com/api/v1/sites", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name: "ai-site-" + Date.now()
+      })
+    });
 
-app.get("/", (req, res) => {
-  res.send(`
-  <h1>Dakota AI Builder</h1>
-  <input id="prompt" value="test app"/>
-  <br/><br/>
-  <button onclick="build()">Build</button>
-  <button onclick="download()">Download</button>
-  <button onclick="deployLive()">Deploy Live</button>
+    const site = await siteRes.json();
 
-  <pre id="out"></pre>
-  <iframe id="preview" style="width:100%;height:400px;border:1px solid #ccc;"></iframe>
+    // DEPLOY FILES
+    const deployRes = await fetch(
+      `https://api.netlify.com/api/v1/sites/${site.id}/deploys`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          files: {
+            "index.html": files["index.html"]
+          }
+        })
+      }
+    );
 
-<script>
-async function build(){
-  const prompt = document.getElementById("prompt").value;
+    const deploy = await deployRes.json();
 
-  const res = await fetch("/create-app", {
-    method:"POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({prompt})
-  });
+    res.json({
+      url: deploy.deploy_ssl_url
+    });
 
-  const data = await res.json();
-
-  document.getElementById("out").textContent =
-    JSON.stringify(data,null,2);
-
-  document.getElementById("preview").srcdoc =
-    data.files["index.html"];
-}
-
-async function download(){
-  const prompt = document.getElementById("prompt").value;
-
-  const res = await fetch("/download-app", {
-    method:"POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({prompt})
-  });
-
-  const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "app.zip";
-  a.click();
-
-  URL.revokeObjectURL(url);
-}
-
-async function deployLive(){
-  const prompt = document.getElementById("prompt").value;
-
-  const res = await fetch("/deploy-live", {
-    method:"POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({prompt})
-  });
-
-  const data = await res.json();
-
-  document.getElementById("out").textContent =
-    JSON.stringify(data,null,2);
-
-  if (data.previewHtml) {
-    document.getElementById("preview").srcdoc = data.previewHtml;
+  } catch (err) {
+    res.json({ error: err.message });
   }
-
-  if (data.liveUrl) {
-    alert("Live site: " + data.liveUrl);
-  }
-}
-</script>
-  `);
 });
 
-app.get("/health", (req, res) => {
+// ===== UPGRADE ROUTE =====
+app.post('/upgrade', (req, res) => {
   res.json({
-    status: "online",
-    app: "Dakota AI Builder"
+    checkout: "https://buy.stripe.com/test_yourlink"
   });
 });
 
-app.get("/check-env", (req, res) => {
+// ===== ENV TEST ROUTE =====
+app.get('/check-env', (req, res) => {
   res.json({
     hasNetlifyToken: !!process.env.NETLIFY_TOKEN
   });
 });
 
-app.post("/create-app", (req, res) => {
-  res.json(generateProject(req.body?.prompt));
-});
-
-app.post("/download-app", (req, res) => {
-  const project = generateProject(req.body?.prompt);
-
-  res.setHeader("Content-Type", "application/zip");
-  res.setHeader("Content-Disposition", "attachment; filename=app.zip");
-
-  const archive = archiver("zip");
-  archive.pipe(res);
-
-  for (const file in project.files) {
-    archive.append(project.files[file], { name: file });
-  }
-
-  archive.finalize();
-});
-
-app.post("/deploy-live", async (req, res) => {
-  try {
-    const token = process.env.NETLIFY_TOKEN;
-
-    if (!token) {
-      return res.status(500).json({
-        error: "Missing NETLIFY_TOKEN in Railway variables"
-      });
-    }
-
-    const project = generateProject(req.body?.prompt);
-    const zipBuffer = await zipProjectToBuffer(project);
-
-    const createRes = await fetch("https://api.netlify.com/api/v1/sites", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/zip"
-      },
-      body: zipBuffer
-    });
-
-    const createData = await createRes.json();
-
-    if (!createRes.ok) {
-      return res.status(500).json({
-        error: "Netlify create/deploy failed",
-        details: createData
-      });
-    }
-
-    const liveUrl =
-      createData.ssl_url ||
-      createData.url ||
-      createData.deploy_ssl_url ||
-      null;
-
-    res.json({
-      status: "deployed",
-      projectName: project.projectName,
-      liveUrl,
-      previewHtml: project.files["index.html"],
-      netlify: createData
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: error.message
-    });
-  }
-});
-
+// ===== START SERVER =====
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
 });
