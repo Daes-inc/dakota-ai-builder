@@ -56,7 +56,6 @@ app.get("/", (req, res) => {
   <button onclick="download()">Download</button>
 
   <pre id="out"></pre>
-
   <iframe id="preview" style="width:100%;height:400px;border:1px solid #ccc;"></iframe>
 
 <script>
@@ -97,6 +96,13 @@ async function download(){
 }
 </script>
   `);
+});
+
+app.get("/health", (req, res) => {
+  res.json({
+    status: "online",
+    app: "Dakota AI Builder"
+  });
 });
 
 app.post("/create-app", (req, res) => {
