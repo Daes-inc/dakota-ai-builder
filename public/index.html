@@ -66,7 +66,7 @@ button {
 async function build() {
   const prompt = document.getElementById("prompt").value;
 
-  const res = await fetch("/build", {
+  const res = await fetch(window.location.origin + "/build", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -80,7 +80,22 @@ async function build() {
 
   const data = await res.json();
 
-  document.getElementById("preview").innerHTML = data.previewHtml;
+  const preview = document.getElementById("preview");
+
+  preview.innerHTML = "";
+  preview.style.background = "white";
+  preview.style.color = "black";
+
+  const iframe = document.createElement("iframe");
+  iframe.style.width = "100%";
+  iframe.style.height = "500px";
+  iframe.style.border = "none";
+
+  preview.appendChild(iframe);
+
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(data.previewHtml);
+  iframe.contentDocument.close();
 }
 </script>
 
