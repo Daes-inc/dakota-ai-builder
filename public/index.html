@@ -33,9 +33,20 @@
     .upgrade {
       margin-top:40px;
       background:#1e293b;
-      padding:20px;
+      padding:25px;
       border-radius:12px;
       display:inline-block;
+    }
+
+    .buy-btn {
+      background:#ef4444;
+      margin-top:10px;
+    }
+
+    .free {
+      margin-top:20px;
+      font-size:14px;
+      color:#94a3b8;
     }
   </style>
 </head>
@@ -43,18 +54,26 @@
 <body>
 
   <h1>GenesisAI AutoBuilder</h1>
-  <p>Build pages that generate income in seconds</p>
+  <p>Build. Launch. Profit.</p>
 
   <form method="POST" action="/build">
-    <input name="idea" placeholder="What do you want to sell?" required><br>
+    <input name="idea" placeholder="What do you want to build?" required><br>
     <input name="affiliate" placeholder="Affiliate link (optional)"><br>
-    <button type="submit">Build My Money Page</button>
+    <button type="submit">Build My Page</button>
   </form>
 
+  <div class="free">
+    Free plan: 2 builds included
+  </div>
+
   <div class="upgrade">
-    <h3>Unlock Unlimited Access</h3>
+    <h3>Unlock Unlimited Builds</h3>
     <p>$20 one-time access</p>
-    <button onclick="alert('Stripe coming next')">Upgrade Now</button>
+
+    <!-- 🔥 YOUR STRIPE LINK IS NOW CONNECTED -->
+    <a href="https://buy.stripe.com/eVq5kD2Gh0aH6ZW8fP5sA00" target="_blank">
+      <button class="buy-btn">Upgrade Now</button>
+    </a>
   </div>
 
 </body>
