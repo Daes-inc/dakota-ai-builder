@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import archiver from "archiver";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -167,6 +168,10 @@ app.get("/", (req, res) => {
     .actions {
       text-align: center;
       margin-bottom: 18px;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
     }
 
     button {
@@ -201,6 +206,7 @@ app.get("/", (req, res) => {
 
       <div class="actions">
         <button onclick="buildApp()">Build App</button>
+        <button onclick="downloadApp()">Download ZIP</button>
       </div>
 
       <pre id="result">Ready.</pre>
@@ -223,6 +229,28 @@ app.get("/", (req, res) => {
       document.getElementById("result").textContent =
         JSON.stringify(data, null, 2);
     }
+
+    async function downloadApp() {
+      const prompt = document.getElementById("prompt").value;
+
+      const res = await fetch("/download-app", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ prompt })
+      });
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "generated-app.zip";
+      a.click();
+
+      window.URL.revokeObjectURL(url);
+    }
   </script>
 </body>
 </html>`);
@@ -232,13 +260,35 @@ app.get("/health", (req, res) => {
   res.json({
     status: "online",
     system: "Dakota AI Builder",
-    version: "1.0"
+    version: "1.1"
   });
 });
 
 app.post("/create-app", (req, res) => {
   const result = generateProject(req.body?.prompt);
   res.json(result);
+});
+
+app.post("/download-app", (req, res) => {
+  const result = generateProject(req.body?.prompt);
+
+  res.setHeader("Content-Type", "application/zip");
+  res.setHeader(
+    "Content-Disposition",
+    \`attachment; filename="\${result.projectName}.zip"\`
+  );
+
+  const archive = archiver("zip", {
+    zlib: { level: 9 }
+  });
+
+  archive.pipe(res);
+
+  for (const [fileName, content] of Object.entries(result.files)) {
+    archive.append(content, { name: fileName });
+  }
+
+  archive.finalize();
 });
 
 app.listen(PORT, () => {
