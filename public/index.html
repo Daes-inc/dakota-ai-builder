@@ -39,7 +39,6 @@ button {
   padding: 20px;
   min-height: 200px;
   border-radius: 10px;
-  white-space: pre-wrap;
 }
 </style>
 </head>
@@ -66,18 +65,25 @@ async function build() {
   try {
     const res = await fetch("/build", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({ prompt })
     });
 
-    const text = await res.text();
+    const data = await res.json();
 
-    preview.innerHTML =
-      "STATUS: " + res.status + "\n\n" +
-      "RAW RESPONSE:\n" + text;
+    // FORCE DISPLAY
+    preview.innerHTML = `
+      <div style="padding:10px;">
+        <h2>SUCCESS</h2>
+        <p><strong>Prompt:</strong> ${data.prompt}</p>
+        <div>${data.previewHtml}</div>
+      </div>
+    `;
 
   } catch (err) {
-    preview.innerHTML = "FRONTEND ERROR:\n" + err.message;
+    preview.innerHTML = "ERROR: " + err.message;
   }
 }
 </script>
