@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>GenesisAI</title>
+  <title>GenesisAI AutoBuilder</title>
+
   <style>
     body {
       font-family: Arial;
@@ -26,18 +27,35 @@
       border-radius:10px;
       color:white;
       font-size:16px;
+      cursor:pointer;
+    }
+
+    .upgrade {
+      margin-top:40px;
+      background:#1e293b;
+      padding:20px;
+      border-radius:12px;
+      display:inline-block;
     }
   </style>
 </head>
 
 <body>
-  <h1>GenesisAI</h1>
-  <p>Build. Launch. Profit.</p>
+
+  <h1>GenesisAI AutoBuilder</h1>
+  <p>Build pages that generate income in seconds</p>
 
   <form method="POST" action="/build">
-    <input name="idea" placeholder="Enter your idea" required><br>
+    <input name="idea" placeholder="What do you want to sell?" required><br>
     <input name="affiliate" placeholder="Affiliate link (optional)"><br>
-    <button type="submit">Build Page</button>
+    <button type="submit">Build My Money Page</button>
   </form>
+
+  <div class="upgrade">
+    <h3>Unlock Unlimited Access</h3>
+    <p>$20 one-time access</p>
+    <button onclick="alert('Stripe coming next')">Upgrade Now</button>
+  </div>
+
 </body>
 </html>
