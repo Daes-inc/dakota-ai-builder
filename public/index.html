@@ -2,24 +2,28 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Dakota AI Builder v99</title>
+<title>Dakota AI Builder v100</title>
+
 <style>
 body {
-  font-family: Arial, sans-serif;
+  font-family: Arial;
   background: #0f172a;
   color: white;
   text-align: center;
   margin: 0;
 }
+
 .container {
   padding: 30px;
 }
+
 input {
   padding: 15px;
   width: 80%;
   border-radius: 10px;
   border: none;
 }
+
 button {
   padding: 15px 25px;
   margin-top: 10px;
@@ -28,8 +32,8 @@ button {
   background: #22c55e;
   color: white;
   font-size: 16px;
-  cursor: pointer;
 }
+
 #preview {
   margin-top: 20px;
   background: #020617;
@@ -37,33 +41,36 @@ button {
   min-height: 200px;
   border-radius: 10px;
   white-space: pre-wrap;
-  word-break: break-word;
 }
+
 .version {
   color: #86efac;
-  margin-bottom: 12px;
-  font-weight: bold;
+  margin-bottom: 10px;
 }
 </style>
 </head>
+
 <body>
+
 <div class="container">
   <h1>Dakota AI Builder</h1>
-  <div class="version">VERSION 99</div>
+  <div class="version">VERSION 100</div>
 
   <input id="prompt" placeholder="Enter your idea" />
   <br>
-  <button id="buildBtn" type="button">Build</button>
+
+  <button id="buildBtn">Build</button>
 
   <div id="preview">Ready...</div>
 </div>
 
 <script>
 document.getElementById("buildBtn").addEventListener("click", async function () {
+
   const prompt = document.getElementById("prompt").value || "test page";
   const preview = document.getElementById("preview");
 
-  preview.textContent = "BUTTON CLICKED...";
+  preview.textContent = "CLICK DETECTED...";
 
   try {
     const res = await fetch("/build", {
@@ -75,11 +82,17 @@ document.getElementById("buildBtn").addEventListener("click", async function () 
     });
 
     const text = await res.text();
-    preview.textContent = "STATUS: " + res.status + "\n\n" + text;
+
+    preview.textContent =
+      "STATUS: " + res.status + "\n\n" +
+      text;
+
   } catch (err) {
     preview.textContent = "ERROR: " + err.message;
   }
+
 });
 </script>
+
 </body>
 </html>
