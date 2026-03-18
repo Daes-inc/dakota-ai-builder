@@ -9,7 +9,6 @@ body {
   font-family: Arial;
   background: #0f172a;
   color: white;
-  margin: 0;
   text-align: center;
 }
 
@@ -22,18 +21,16 @@ input {
   width: 80%;
   border-radius: 10px;
   border: none;
-  margin-bottom: 15px;
 }
 
 button {
   padding: 15px 25px;
-  margin: 5px;
+  margin-top: 10px;
   border-radius: 10px;
   border: none;
   background: #22c55e;
   color: white;
   font-size: 16px;
-  cursor: pointer;
 }
 
 #preview {
@@ -42,6 +39,7 @@ button {
   padding: 20px;
   min-height: 200px;
   border-radius: 10px;
+  white-space: pre-wrap;
 }
 </style>
 </head>
@@ -52,9 +50,7 @@ button {
   <h1>Dakota AI Builder</h1>
 
   <input id="prompt" placeholder="Enter your idea" />
-
   <br>
-
   <button onclick="build()">Build</button>
 
   <div id="preview">Ready...</div>
@@ -65,25 +61,23 @@ async function build() {
   const prompt = document.getElementById("prompt").value;
   const preview = document.getElementById("preview");
 
-  preview.innerHTML = "Loading...";
+  preview.innerHTML = "LOADING...";
 
   try {
     const res = await fetch("/build", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        prompt: prompt
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt })
     });
 
-    const data = await res.json();
+    const text = await res.text();
 
-    preview.innerHTML = data.previewHtml;
+    preview.innerHTML =
+      "STATUS: " + res.status + "\n\n" +
+      "RAW RESPONSE:\n" + text;
 
   } catch (err) {
-    preview.innerHTML = "ERROR: " + err.message;
+    preview.innerHTML = "FRONTEND ERROR:\n" + err.message;
   }
 }
 </script>
