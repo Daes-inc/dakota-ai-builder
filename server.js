@@ -12,6 +12,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const usage = {};
 const savedProjects = [];
+
 const analytics = {
   builds: 0,
   deploys: 0,
@@ -20,6 +21,18 @@ const analytics = {
   upgradeClicks: 0
 };
 
+// 🔥 VIP USERS (UNLIMITED FREE ACCESS)
+const VIP_USERS = [
+  "127.0.0.1",
+  "::1",
+  "166.181.251.19" // YOUR IP ADDED
+];
+
+// Check VIP
+function isVIP(ip) {
+  return VIP_USERS.includes(ip);
+}
+
 function slugify(text) {
   return String(text).toLowerCase().replace(/[^a-z0-9]+/g, "-");
 }
@@ -27,11 +40,10 @@ function slugify(text) {
 function generateProject(prompt, affiliateLinkInput) {
   const projectName = slugify(prompt);
 
-  // 🔥 FIXED AFFILIATE LOGIC
   let affiliateLink = affiliateLinkInput;
 
   if (!affiliateLink || affiliateLink.trim() === "") {
-    affiliateLink = "https://google.com"; // TEST DEFAULT
+    affiliateLink = "https://google.com";
   }
 
   if (!affiliateLink.startsWith("http")) {
@@ -74,12 +86,15 @@ app.post("/build", (req, res) => {
   const ip = req.ip;
   usage[ip] = usage[ip] || 0;
 
-  if (usage[ip] >= 2) {
-    return res.json({
-      success: false,
-      error: "Upgrade required",
-      upgrade: true
-    });
+  // 🔥 VIP BYPASS
+  if (!isVIP(ip)) {
+    if (usage[ip] >= 2) {
+      return res.json({
+        success: false,
+        error: "Upgrade required",
+        upgrade: true
+      });
+    }
   }
 
   usage[ip]++;
@@ -171,5 +186,5 @@ app.post("/deploy", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log("🔥 MONEY SYSTEM LIVE ON PORT " + PORT);
+  console.log("🔥 VIP MONEY SYSTEM LIVE ON PORT " + PORT);
 });
