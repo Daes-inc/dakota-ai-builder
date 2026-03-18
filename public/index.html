@@ -5,84 +5,115 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       background: #0f172a;
       color: white;
       text-align: center;
       padding: 20px;
+      margin: 0;
+    }
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
     }
     input {
-      padding: 10px;
-      width: 80%;
-      border-radius: 8px;
+      padding: 14px;
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 10px;
       border: none;
+      margin-bottom: 12px;
+      font-size: 16px;
     }
     button {
-      padding: 12px;
-      margin: 8px;
-      border-radius: 8px;
+      padding: 12px 18px;
+      margin: 6px;
+      border-radius: 10px;
       border: none;
       background: #22c55e;
-      color: black;
+      color: white;
       font-weight: bold;
+      cursor: pointer;
     }
     #output {
       margin-top: 20px;
       background: #020617;
       padding: 15px;
-      border-radius: 10px;
+      border-radius: 12px;
       white-space: pre-wrap;
+      word-break: break-word;
+      text-align: left;
+      min-height: 140px;
+    }
+    iframe {
+      width: 100%;
+      height: 500px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      background: white;
+      margin-top: 20px;
+    }
+    a {
+      color: #86efac;
     }
   </style>
 </head>
 <body>
+  <div class="wrap">
+    <h1>Dakota AI Builder</h1>
 
-<h1>🚀 Dakota AI Builder</h1>
+    <input id="prompt" placeholder="Describe your website..." value="fitness landing page" />
 
-<input id="prompt" placeholder="Describe your website..." />
+    <div>
+      <button onclick="build()">Build</button>
+      <button onclick="deploy()">Deploy Live</button>
+    </div>
 
-<br>
+    <div id="output">Ready...</div>
+    <iframe id="preview"></iframe>
+  </div>
 
-<button onclick="build()">Build</button>
-<button onclick="deploy()">Deploy Live</button>
+  <script>
+    async function build() {
+      document.getElementById("output").innerText = "Building...";
+      const prompt = document.getElementById("prompt").value;
 
-<div id="output">Ready...</div>
+      const res = await fetch("/build", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt })
+      });
 
-<script>
-async function build() {
-  document.getElementById("output").innerText = "Building...";
-  const prompt = document.getElementById("prompt").value;
+      const data = await res.json();
+      window.generatedProject = data;
 
-  const res = await fetch('/build', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt })
-  });
+      document.getElementById("output").innerText =
+        JSON.stringify(data, null, 2);
 
-  const data = await res.json();
-  window.generatedProject = data;
-  document.getElementById("output").innerText = JSON.stringify(data, null, 2);
-}
+      if (data.files && data.files["index.html"]) {
+        document.getElementById("preview").srcdoc = data.files["index.html"];
+      }
+    }
 
-async function deploy() {
-  document.getElementById("output").innerText = "Deploying...";
+    async function deploy() {
+      document.getElementById("output").innerText = "Deploying...";
 
-  const res = await fetch('/deploy', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(window.generatedProject)
-  });
+      const res = await fetch("/deploy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(window.generatedProject || {})
+      });
 
-  const data = await res.json();
+      const data = await res.json();
 
-  if (data.url) {
-    document.getElementById("output").innerHTML =
-      `✅ LIVE:<br><a href="${data.url}" target="_blank">${data.url}</a>`;
-  } else {
-    document.getElementById("output").innerText = JSON.stringify(data);
-  }
-}
-</script>
-
+      if (data.url) {
+        document.getElementById("output").innerHTML =
+          '✅ LIVE:<br><a href="' + data.url + '" target="_blank">' + data.url + "</a>";
+      } else {
+        document.getElementById("output").innerText =
+          JSON.stringify(data, null, 2);
+      }
+    }
+  </script>
 </body>
 </html>
