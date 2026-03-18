@@ -24,8 +24,19 @@ function slugify(text) {
   return String(text).toLowerCase().replace(/[^a-z0-9]+/g, "-");
 }
 
-function generateProject(prompt, affiliateLink) {
+function generateProject(prompt, affiliateLinkInput) {
   const projectName = slugify(prompt);
+
+  // 🔥 FIXED AFFILIATE LOGIC
+  let affiliateLink = affiliateLinkInput;
+
+  if (!affiliateLink || affiliateLink.trim() === "") {
+    affiliateLink = "https://google.com"; // TEST DEFAULT
+  }
+
+  if (!affiliateLink.startsWith("http")) {
+    affiliateLink = "https://" + affiliateLink;
+  }
 
   const html = `
   <html>
@@ -39,7 +50,11 @@ function generateProject(prompt, affiliateLink) {
   <body>
     <h1>${prompt}</h1>
     <p>High converting landing page</p>
-    <a class="btn" href="${affiliateLink}" target="_blank">🔥 Get This Offer Now</a>
+
+    <a class="btn" href="${affiliateLink}" target="_blank" rel="noopener noreferrer">
+      🔥 Get This Offer Now
+    </a>
+
   </body>
   </html>
   `;
@@ -54,6 +69,7 @@ function generateProject(prompt, affiliateLink) {
   };
 }
 
+// BUILD
 app.post("/build", (req, res) => {
   const ip = req.ip;
   usage[ip] = usage[ip] || 0;
@@ -70,11 +86,12 @@ app.post("/build", (req, res) => {
   analytics.builds++;
 
   const prompt = req.body.prompt || "AI site";
-  const affiliateLink = req.body.affiliateLink || "https://YOUR_AFFILIATE_LINK";
+  const affiliateLink = req.body.affiliateLink;
 
   res.json(generateProject(prompt, affiliateLink));
 });
 
+// UPGRADE
 app.post("/upgrade", (req, res) => {
   analytics.upgradeClicks++;
 
@@ -84,20 +101,24 @@ app.post("/upgrade", (req, res) => {
   });
 });
 
+// SAVE
 app.post("/save-project", (req, res) => {
   savedProjects.push(req.body);
   analytics.saves++;
   res.json({ success: true });
 });
 
+// PROJECTS
 app.get("/projects", (req, res) => {
   res.json({ items: savedProjects });
 });
 
+// ANALYTICS
 app.get("/analytics", (req, res) => {
   res.json({ analytics });
 });
 
+// DOWNLOAD
 app.post("/download", (req, res) => {
   const archive = archiver("zip");
   res.attachment("site.zip");
@@ -112,6 +133,7 @@ app.post("/download", (req, res) => {
   archive.finalize();
 });
 
+// DEPLOY
 app.post("/deploy", async (req, res) => {
   const token = process.env.NETLIFY_TOKEN;
 
@@ -149,5 +171,5 @@ app.post("/deploy", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log("MONEY SYSTEM LIVE " + PORT);
+  console.log("🔥 MONEY SYSTEM LIVE ON PORT " + PORT);
 });
