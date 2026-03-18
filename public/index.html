@@ -1,94 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Dakota AI Builder v103</title>
-
-<style>
-body {
-  font-family: Arial;
-  background: #0f172a;
-  color: white;
-  text-align: center;
-}
-
-.container {
-  padding: 30px;
-}
-
-input {
-  padding: 15px;
-  width: 80%;
-  border-radius: 10px;
-  border: none;
-}
-
-button {
-  padding: 15px 25px;
-  margin-top: 10px;
-  border-radius: 10px;
-  border: none;
-  background: #22c55e;
-  color: white;
-}
-
-#preview {
-  margin-top: 20px;
-  background: #020617;
-  padding: 20px;
-  min-height: 200px;
-  border-radius: 10px;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Dakota AI Builder v200</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+      margin: 0;
+    }
+    .container {
+      padding: 30px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .version {
+      color: #86efac;
+      margin-bottom: 12px;
+      font-weight: bold;
+    }
+    input {
+      padding: 15px;
+      width: 80%;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+    button {
+      padding: 15px 25px;
+      margin-top: 10px;
+      border-radius: 10px;
+      border: none;
+      background: #22c55e;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .preview-box {
+      margin-top: 20px;
+      background: #020617;
+      padding: 20px;
+      min-height: 160px;
+      border-radius: 10px;
+      color: #cbd5e1;
+    }
+  </style>
 </head>
-
 <body>
+  <div class="container">
+    <h1>Dakota AI Builder</h1>
+    <div class="version">VERSION 200</div>
 
-<div class="container">
-  <h1>Dakota AI Builder</h1>
-  <div>VERSION 103</div>
+    <form method="POST" action="/build">
+      <input name="prompt" placeholder="Enter your idea" value="fitness landing page" />
+      <br>
+      <button type="submit">Build</button>
+    </form>
 
-  <input id="prompt" placeholder="Enter your idea" />
-  <br>
-  <button id="btn">Build</button>
-
-  <div id="preview">Ready...</div>
-</div>
-
-<script>
-document.getElementById("btn").onclick = async function () {
-
-  const preview = document.getElementById("preview");
-
-  preview.innerHTML = "CLICK WORKED";
-
-  try {
-    const res = await fetch("https://dakota-ai-builder-production.up.railway.app/build", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        prompt: document.getElementById("prompt").value || "test page"
-      })
-    });
-
-    preview.innerHTML = "REQUEST SENT";
-
-    const data = await res.json();
-
-    preview.innerHTML = `
-      <div style="background:white; color:black; padding:15px; border-radius:10px;">
-        ${data.previewHtml}
-      </div>
-    `;
-
-  } catch (err) {
-    preview.innerHTML = "ERROR: " + err.message;
-  }
-
-};
-</script>
-
+    <div class="preview-box">
+      This version uses direct form submit to the server. No frontend JS required.
+    </div>
+  </div>
 </body>
 </html>
